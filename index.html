@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>조선대 플러스+</title>
+  <style>
+    :root {
+      --main-blue: #005bac;
+      --dark-blue: #003f7d;
+      --light-blue: #eaf4ff;
+      --very-light-blue: #f5f9ff;
+      --white: #ffffff;
+      --text: #1f2937;
+      --gray: #6b7280;
+      --border: #d7e3f3;
+      --shadow: rgba(0, 59, 120, 0.13);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
+      background: linear-gradient(180deg, #ffffff 0%, #f3f7fc 100%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+    .chatbot-wrapper {
+      width: 100%;
+      max-width: 980px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 14px 35px var(--shadow);
+    }
+    .header {
+      background: var(--main-blue);
+      color: var(--white);
+      text-align: center;
+      padding: 34px 20px;
+    }
+    .header h1 {
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+    .header p {
+      font-size: 18px;
+      font-weight: 700;
+      opacity: 0.95;
+      line-height: 1.55;
+    }
+    .quick-guide {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 18px 20px;
+      background: var(--very-light-blue);
+      border-bottom: 1px solid var(--border);
+    }
+    .guide-chip {
+      border: 1px solid #b8d5f4;
+      background: var(--white);
+      color: var(--main-blue);
+      border-radius: 999px;
+      padding: 10px 15px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .guide-chip:hover { background: var(--light-blue); transform: translateY(-1px); }
+    .chat-window {
+      height: 500px;
+      overflow-y: auto;
+      padding: 22px;
+      background: var(--white);
+      scroll-behavior: smooth;
+    }
+    .message-row { display: flex; margin-bottom: 15px; }
+    .message-row.user { justify-content: flex-end; }
+    .message-row.bot { justify-content: flex-start; }
+    .message {
+      max-width: 80%;
+      padding: 13px 15px;
+      border-radius: 16px;
+      line-height: 1.62;
+      font-size: 15px;
+      word-break: keep-all;
+      white-space: pre-line;
+    }
+    .message.user {
+      background: var(--main-blue);
+      color: var(--white);
+      border-bottom-right-radius: 5px;
+    }
+    .message.bot {
+      background: var(--light-blue);
+      color: var(--text);
+      border: 1px solid #cfe4fb;
+      border-bottom-left-radius: 5px;
+    }
+    .input-area {
+      display: flex;
+      gap: 10px;
+      padding: 18px;
+      background: var(--very-light-blue);
+      border-top: 1px solid var(--border);
+    }
+    #userInput {
+      flex: 1;
+      border: 1px solid #b9cde6;
+      border-radius: 14px;
+      padding: 14px 15px;
+      font-size: 15px;
+      outline: none;
+      background: var(--white);
+      transition: 0.2s;
+    }
+    #userInput:focus {
+      border-color: var(--main-blue);
+      box-shadow: 0 0 0 3px rgba(0, 91, 172, 0.13);
+    }
+    #sendButton {
+      border: none;
+      border-radius: 14px;
+      padding: 0 24px;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--white);
+      background: var(--main-blue);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: 0.2s;
+    }
+    #sendButton:hover { background: var(--dark-blue); transform: translateY(-1px); }
+    .notice {
+      padding: 12px 18px 18px;
+      color: var(--gray);
+      font-size: 12px;
+      background: var(--very-light-blue);
+      line-height: 1.6;
+    }
+    @media (max-width: 640px) {
+      body { padding: 12px; align-items: flex-start; }
+      .chatbot-wrapper { border-radius: 16px; }
+      .header { padding: 24px 16px; }
+      .header h1 { font-size: 28px; }
+      .header p { font-size: 14px; }
+      .chat-window { height: 62vh; padding: 16px; }
+      .message { max-width: 90%; font-size: 14px; }
+      .input-area { flex-direction: column; }
+      #sendButton { width: 100%; padding: 13px 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="chatbot-wrapper">
+    <header class="header">
+      <h1>조선대 플러스+</h1>
+      <p>학사일정과 기숙사 식단을 한 번에 검색할 수 있습니다.</p>
+    </header>
+
+    <section class="quick-guide" aria-label="빠른 검색 키워드">
+      <button class="guide-chip" type="button">중간고사</button>
+      <button class="guide-chip" type="button">개강일</button>
+      <button class="guide-chip" type="button">복수전공</button>
+      <button class="guide-chip" type="button">오늘 식단</button>
+      <button class="guide-chip" type="button">어제 식단</button>
+    </section>
+
+    <section id="chatWindow" class="chat-window" aria-live="polite">
+      <div class="message-row bot">
+        <div class="message bot">안녕하세요. 조선대 플러스+입니다.
+학사일정 또는 기숙사 식단을 질문해 주세요.
+
+예시
+- 중간고사 언제야?
+- 개강일 알려줘
+- 5월 22일 중식
+- 어제 식단
+- 지난주 저녁</div>
+      </div>
+    </section>
+
+    <section class="input-area">
+      <input id="userInput" type="text" placeholder="질문을 입력하세요. 예: 어제 식단" autocomplete="off" />
+      <button id="sendButton" type="button">전송</button>
+    </section>
+
+    <p class="notice">
+      ※ 이 챗봇은 파일 내부에 저장된 학사일정/식단 데이터를 기준으로 답변합니다. 실제 서비스에 사용할 때는 조선대학교 공식 홈페이지의 최신 자료를 확인한 뒤 데이터를 수정해 주세요.
+    </p>
+  </main>
+
+  <script>
+    const NO_MEAL_TEXT = "등록된 식단내용이(가) 없습니다.";
+
+    const academicSchedules = [
+  {
+    "startDate": "2026-01-01",
+    "endDate": "",
+    "title": "신정",
+    "keywords": [
+      "신정",
+      "공휴일",
+      "1월1일"
+    ],
+    "description": "신정입니다."
+  },
+  {
+    "startDate": "2026-01-02",
+    "endDate": "2026-01-15",
+    "title": "휴학/복학/전과/재입학/복수전공/CSU나노인증/조기졸업/교직이수 신청 기간",
+    "keywords": [
+      "휴학",
+      "복학",
+      "전과",
+      "재입학",
+      "복수전공",
+      "연계전공",
+      "부전공",
+      "융합전공",
+      "CSU나노인증",
+      "조기졸업",
+      "교직이수",
+      "신청"
+    ],
+    "description": "각종 학적 변경 및 전공 관련 신청 기간입니다."
+  },
+  {
+    "startDate": "2026-01-02",
+    "endDate": "2026-01-22",
+    "title": "동계 계절학기",
+    "keywords": [
+      "동계",
+      "계절학기",
+      "겨울계절학기"
+    ],
+    "description": "동계 계절학기 운영 기간입니다."
+  },
+  {
+    "startDate": "2026-02-09",
+    "endDate": "2026-02-14",
+    "title": "2026학년도 1학기 수강신청 기간",
+    "keywords": [
+      "1학기수강신청",
+      "수강신청",
+      "수강신청기간",
+      "1학기신청"
+    ],
+    "description": "2026학년도 1학기 수강신청 기간입니다."
+  },
+  {
+    "startDate": "2026-02-16",
+    "endDate": "2026-02-18",
+    "title": "설날",
+    "keywords": [
+      "설날",
+      "연휴",
+      "공휴일"
+    ],
+    "description": "설날 연휴입니다."
+  },
+  {
+    "startDate": "2026-02-23",
+    "endDate": "2026-02-27",
+    "title": "2026학년도 1학기 등록 기간",
+    "keywords": [
+      "1학기등록",
+      "등록",
+      "등록기간",
+      "등록금"
+    ],
+    "description": "2026학년도 1학기 등록 기간입니다."
+  },
+  {
+    "startDate": "2026-02-25",
+    "endDate": "",
+    "title": "2025학년도 전기 학위수여식",
+    "keywords": [
+      "학위수여식",
+      "졸업식",
+      "전기학위수여식"
+    ],
+    "description": "2025학년도 전기 학위수여식입니다."
+  },
+  {
+    "startDate": "2026-03-01",
+    "endDate": "",
+    "title": "삼일절 및 1학기 개시",
+    "keywords": [
+      "삼일절",
+      "3.1절",
+      "1학기개시",
+      "1학기시작"
+    ],
+    "description": "삼일절이자 1학기 개시일입니다."
+  },
+  {
+    "startDate": "2026-03-02",
+    "endDate": "",
+    "title": "삼일절 대체공휴일",
+    "keywords": [
+      "삼일절대체공휴일",
+      "대체공휴일",
+      "휴업일",
+      "공휴일"
+    ],
+    "description": "삼일절 대체공휴일입니다."
+  },
+  {
+    "startDate": "2026-03-03",
+    "endDate": "",
+    "title": "1학기 개강 및 입학식",
+    "keywords": [
+      "1학기개강",
+      "개강",
+      "개강일",
+      "입학식",
+      "1학기",
+      "학기시작"
+    ],
+    "description": "1학기 수업이 시작되고 입학식이 진행되는 날입니다."
+  },
+  {
+    "startDate": "2026-03-03",
+    "endDate": "2026-03-09",
+    "title": "1학기 수강신청 정정 및 취소 기간",
+    "keywords": [
+      "수강신청정정",
+      "수강정정",
+      "수강취소",
+      "정정",
+      "취소",
+      "1학기정정"
+    ],
+    "description": "1학기 수강신청을 정정하거나 취소할 수 있는 기간입니다."
+  },
+  {
+    "startDate": "2026-03-10",
+    "endDate": "2026-03-13",
+    "title": "폐강과목 수강신청 정정 기간",
+    "keywords": [
+      "폐강",
+      "폐강과목",
+      "폐강과목정정",
+      "수강신청정정"
+    ],
+    "description": "폐강과목에 대한 수강신청 정정 기간입니다."
+  },
+  {
+    "startDate": "2026-03-27",
+    "endDate": "",
+    "title": "수업일수 1/4선",
+    "keywords": [
+      "수업일수",
+      "1/4선",
+      "사분의일",
+      "출석"
+    ],
+    "description": "1학기 수업일수 1/4선입니다."
+  },
+  {
+    "startDate": "2026-04-20",
+    "endDate": "2026-04-24",
+    "title": "1학기 중간고사 기간",
+    "keywords": [
+      "1학기중간고사",
+      "중간고사",
+      "중간",
+      "시험",
+      "1학기시험"
+    ],
+    "description": "1학기 중간고사가 진행되는 기간입니다."
+  },
+  {
+    "startDate": "2026-04-23",
+    "endDate": "",
+    "title": "수업일수 2/4선",
+    "keywords": [
+      "수업일수",
+      "2/4선",
+      "사분의이",
+      "출석"
+    ],
+    "description": "1학기 수업일수 2/4선입니다."
+  },
+  {
+    "startDate": "2026-05-01",
+    "endDate": "",
+    "title": "근로자의 날 휴업일",
+    "keywords": [
+      "근로자의날",
+      "휴업일",
+      "휴강",
+      "쉬는날"
+    ],
+    "description": "근로자의 날 휴업일입니다."
+  },
+  {
+    "startDate": "2026-05-05",
+    "endDate": "",
+    "title": "어린이날 휴업일",
+    "keywords": [
+      "어린이날",
+      "휴업일",
+      "휴강",
+      "쉬는날"
+    ],
+    "description": "어린이날 휴업일입니다."
+  },
+  {
+    "startDate": "2026-05-22",
+    "endDate": "",
+    "title": "수업일수 3/4선",
+    "keywords": [
+      "수업일수",
+      "3/4선",
+      "사분의삼",
+      "출석"
+    ],
+    "description": "1학기 수업일수 3/4선입니다."
+  },
+  {
+    "startDate": "2026-05-25",
+    "endDate": "",
+    "title": "부처님 오신 날 대체공휴일 휴업일",
+    "keywords": [
+      "부처님오신날",
+      "석가탄신일",
+      "대체공휴일",
+      "휴업일",
+      "휴강",
+      "쉬는날"
+    ],
+    "description": "부처님 오신 날 대체공휴일로 인한 휴업일입니다."
+  },
+  {
+    "startDate": "2026-06-03",
+    "endDate": "",
+    "title": "2026 지방선거 휴업일",
+    "keywords": [
+      "지방선거",
+      "선거",
+      "휴업일",
+      "휴강",
+      "쉬는날"
+    ],
+    "description": "2026 지방선거로 인한 휴업일입니다."
+  },
+  {
+    "startDate": "2026-06-06",
+    "endDate": "",
+    "title": "현충일",
+    "keywords": [
+      "현충일",
+      "공휴일"
+    ],
+    "description": "현충일입니다."
+  },
+  {
+    "startDate": "2026-06-08",
+    "endDate": "2026-07-03",
+    "title": "1학기 수업평가 기간",
+    "keywords": [
+      "수업평가",
+      "강의평가",
+      "평가"
+    ],
+    "description": "1학기 수업평가가 진행되는 기간입니다."
+  },
+  {
+    "startDate": "2026-06-09",
+    "endDate": "2026-06-12",
+    "title": "휴업일 보강수업 기간",
+    "keywords": [
+      "보강",
+      "보강수업",
+      "휴업일보강",
+      "보강기간"
+    ],
+    "description": "휴업일에 따른 보강수업이 진행되는 기간입니다."
+  },
+  {
+    "startDate": "2026-06-15",
+    "endDate": "2026-06-19",
+    "title": "1학기 기말고사 기간",
+    "keywords": [
+      "1학기기말고사",
+      "기말고사",
+      "기말",
+      "시험",
+      "1학기시험"
+    ],
+    "description": "1학기 기말고사가 진행되는 기간입니다."
+  },
+  {
+    "startDate": "2026-06-15",
+    "endDate": "2026-06-28",
+    "title": "성적 전산입력 기간",
+    "keywords": [
+      "성적전산입력",
+      "성적입력",
+      "성적",
+      "전산입력"
+    ],
+    "description": "1학기 성적 전산입력 기간입니다."
+  },
+  {
+    "startDate": "2026-06-29",
+    "endDate": "2026-07-05",
+    "title": "성적 열람 기간",
+    "keywords": [
+      "성적열람",
+      "성적확인",
+      "성적",
+      "열람"
+    ],
+    "description": "1학기 성적 열람 기간입니다."
+  },
+  {
+    "startDate": "2026-07-01",
+    "endDate": "2026-07-14",
+    "title": "휴학/복학/전과/재입학/복수전공/CSU나노인증/조기졸업 신청 기간",
+    "keywords": [
+      "휴학",
+      "복학",
+      "전과",
+      "재입학",
+      "복수전공",
+      "연계전공",
+      "부전공",
+      "융합전공",
+      "CSU나노인증",
+      "조기졸업",
+      "신청"
+    ],
+    "description": "각종 학적 변경 및 전공 관련 신청 기간입니다."
+  },
+  {
+    "startDate": "2026-07-01",
+    "endDate": "2026-07-21",
+    "title": "하계 계절학기",
+    "keywords": [
+      "하계",
+      "계절학기",
+      "여름계절학기"
+    ],
+    "description": "하계 계절학기 운영 기간입니다."
+  },
+  {
+    "startDate": "2026-07-17",
+    "endDate": "",
+    "title": "제헌절 휴업일",
+    "keywords": [
+      "제헌절",
+      "휴업일",
+      "휴강",
+      "쉬는날"
+    ],
+    "description": "제헌절 휴업일입니다."
+  },
+  {
+    "startDate": "2026-08-17",
+    "endDate": "",
+    "title": "광복절 대체공휴일",
+    "keywords": [
+      "광복절",
+      "대체공휴일",
+      "공휴일",
+      "휴업일"
+    ],
+    "description": "광복절 대체공휴일입니다."
+  },
+  {
+    "startDate": "2026-08-18",
+    "endDate": "2026-08-23",
+    "title": "2026학년도 2학기 수강신청 기간",
+    "keywords": [
+      "2학기수강신청",
+      "수강신청",
+      "수강신청기간",
+      "2학기신청"
+    ],
+    "description": "2026학년도 2학기 수강신청이 진행되는 기간입니다."
+  },
+  {
+    "startDate": "2026-08-21",
+    "endDate": "",
+    "title": "2025학년도 후기 학위수여식",
+    "keywords": [
+      "학위수여식",
+      "졸업식",
+      "후기학위수여식"
+    ],
+    "description": "2025학년도 후기 학위수여식입니다."
+  },
+  {
+    "startDate": "2026-08-24",
+    "endDate": "2026-08-28",
+    "title": "2026학년도 2학기 등록 기간",
+    "keywords": [
+      "2학기등록",
+      "등록",
+      "등록기간",
+      "등록금"
+    ],
+    "description": "2026학년도 2학기 등록 기간입니다."
+  },
+  {
+    "startDate": "2026-09-01",
+    "endDate": "",
+    "title": "2학기 개강 및 개시",
+    "keywords": [
+      "2학기개강",
+      "개강",
+      "개강일",
+      "2학기",
+      "학기시작"
+    ],
+    "description": "2026학년도 2학기가 시작되는 날입니다."
+  },
+  {
+    "startDate": "2026-09-01",
+    "endDate": "2026-09-07",
+    "title": "2학기 수강신청 정정 및 취소 기간",
+    "keywords": [
+      "수강신청정정",
+      "수강정정",
+      "수강취소",
+      "정정",
+      "취소",
+      "2학기정정"
+    ],
+    "description": "2학기 수강신청을 정정하거나 취소할 수 있는 기간입니다."
+  },
+  {
+    "startDate": "2026-09-08",
+    "endDate": "2026-09-11",
+    "title": "폐강과목 수강신청 정정 기간",
+    "keywords": [
+      "폐강",
+      "폐강과목",
+      "폐강과목정정",
+      "수강신청정정"
+    ],
+    "description": "폐강과목에 대한 수강신청 정정 기간입니다."
+  },
+  {
+    "startDate": "2026-09-24",
+    "endDate": "2026-09-26",
+    "title": "추석 휴업일",
+    "keywords": [
+      "추석",
+      "휴업일",
+      "휴강",
+      "쉬는날"
+    ],
+    "description": "추석 연휴로 인한 휴업일입니다."
+  },
+  {
+    "startDate": "2026-09-29",
+    "endDate": "",
+    "title": "개교기념일 휴업일",
+    "keywords": [
+      "개교기념일",
+      "휴업일",
+      "휴강",
+      "쉬는날"
+    ],
+    "description": "개교기념일로 수업이 없는 휴업일입니다."
+  },
+  {
+    "startDate": "2026-09-30",
+    "endDate": "",
+    "title": "수업일수 1/4선",
+    "keywords": [
+      "수업일수",
+      "1/4선",
+      "사분의일",
+      "출석"
+    ],
+    "description": "2학기 수업일수 1/4선입니다."
+  },
+  {
+    "startDate": "2026-10-05",
+    "endDate": "",
+    "title": "개천절 대체공휴일 휴업일",
+    "keywords": [
+      "개천절",
+      "대체공휴일",
+      "휴업일",
+      "휴강",
+      "쉬는날"
+    ],
+    "description": "개천절 대체공휴일로 인한 휴업일입니다."
+  },
+  {
+    "startDate": "2026-10-09",
+    "endDate": "",
+    "title": "한글날 휴업일",
+    "keywords": [
+      "한글날",
+      "휴업일",
+      "휴강",
+      "쉬는날"
+    ],
+    "description": "한글날로 인한 휴업일입니다."
+  },
+  {
+    "startDate": "2026-10-19",
+    "endDate": "2026-10-26",
+    "title": "2학기 중간고사 기간",
+    "keywords": [
+      "2학기중간고사",
+      "중간고사",
+      "중간",
+      "시험",
+      "2학기시험"
+    ],
+    "description": "2학기 중간고사가 진행되는 기간입니다."
+  },
+  {
+    "startDate": "2026-10-29",
+    "endDate": "",
+    "title": "수업일수 2/4선",
+    "keywords": [
+      "수업일수",
+      "2/4선",
+      "사분의이",
+      "출석"
+    ],
+    "description": "2학기 수업일수 2/4선입니다."
+  },
+  {
+    "startDate": "2026-11-25",
+    "endDate": "",
+    "title": "수업일수 3/4선",
+    "keywords": [
+      "수업일수",
+      "3/4선",
+      "사분의삼",
+      "출석"
+    ],
+    "description": "2학기 수업일수 3/4선입니다."
+  },
+  {
+    "startDate": "2026-12-08",
+    "endDate": "2027-01-02",
+    "title": "2학기 수업평가 기간",
+    "keywords": [
+      "수업평가",
+      "강의평가",
+      "평가"
+    ],
+    "description": "2학기 수업평가가 진행되는 기간입니다."
+  },
+  {
+    "startDate": "2026-12-08",
+    "endDate": "2026-12-14",
+    "title": "휴업일 보강수업 기간",
+    "keywords": [
+      "보강",
+      "보강수업",
+      "휴업일보강",
+      "보강기간"
+    ],
+    "description": "휴업일에 따른 보강수업이 진행되는 기간입니다."
+  },
+  {
+    "startDate": "2026-12-15",
+    "endDate": "2026-12-21",
+    "title": "2학기 기말고사 기간",
+    "keywords": [
+      "2학기기말고사",
+      "기말고사",
+      "기말",
+      "시험",
+      "2학기시험"
+    ],
+    "description": "2학기 기말고사가 진행되는 기간입니다."
+  },
+  {
+    "startDate": "2026-12-15",
+    "endDate": "2026-12-28",
+    "title": "성적 전산입력 기간",
+    "keywords": [
+      "성적전산입력",
+      "성적입력",
+      "성적",
+      "전산입력"
+    ],
+    "description": "2학기 성적 전산입력 기간입니다."
+  },
+  {
+    "startDate": "2026-12-25",
+    "endDate": "",
+    "title": "성탄절",
+    "keywords": [
+      "성탄절",
+      "크리스마스",
+      "공휴일",
+      "휴업일"
+    ],
+    "description": "성탄절입니다."
+  },
+  {
+    "startDate": "2026-12-29",
+    "endDate": "2027-01-04",
+    "title": "성적 열람 기간",
+    "keywords": [
+      "성적열람",
+      "성적확인",
+      "성적",
+      "열람"
+    ],
+    "description": "2학기 성적을 열람할 수 있는 기간입니다."
+  }
+];
+
+    const mealData = [
+  {
+    "date": "2026-03-02",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-03",
+    "lunch": "쌀 밥\n시금치된장국\n제육볶음\n모듬쌈&쌈장\n무생채\n배추김치\n\n<선택식>\n토마토스파게티\n크림스프\n미니돈까스샐러드\n딸기잼모닝빵\n오이피클\n배추김치",
+    "dinner": "쌀 밥\n김치콩나물국\n궁중떡볶이\n고구마맛탕\n오이무침\n배추김치"
+  },
+  {
+    "date": "2026-03-04",
+    "lunch": "쌀 밥\n미역국\n소세지야채볶음\n한식잡채\n도토리묵무침\n배추김치\n\n<선택식>\n김치볶음밥\n미역국\n치즈스틱/계란후라이\n치커리샐러드\n블루베리에이드\n깍두기",
+    "dinner": "흑미밥\n맑은순두부국\n닭볶음탕\n볼어묵볶음\n숙주나물\n배추김치"
+  },
+  {
+    "date": "2026-03-05",
+    "lunch": "쌀 밥\n소고기무국\n돈육모듬장조림\n구운김&양념장\n봄동겉절이\n배추김치\n\n<선택식>\n김가루주먹밥\n바지락칼국수\n왕만두&초간장\n봄동겉절이\n요구르트\n배추김치",
+    "dinner": "쌀 밥\n계란파국\n카레소스\n생선까스&타르소스\n단무지무침\n배추김치"
+  },
+  {
+    "date": "2026-03-06",
+    "lunch": "쌀 밥\n부대찌개\n치킨너겟&머스타드\n감자채볶음\n호박나물\n배추김치\n\n<선택식>\n설렁탕&소면사리\n메밀전병\n마카로니샐러드\n부추겉절이\n깍두기",
+    "dinner": "쌀 밥\n팽이두부장국\n비빔나물\n(콩나물·무생채·상추채/약고추장)\n설탕핫도그\n후식 귤\n배추김치"
+  },
+  {
+    "date": "2026-03-07",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-08",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-09",
+    "lunch": "쌀 밥\n계란파국\n짜장소스\n만두탕수\n콩나물유부냉채\n배추김치\n\n<선택식>\n봉골레파스타\n쇠고기스프\n또띠아피자\n오이피클/요구르트\n배추김치",
+    "dinner": "쌀 밥\n미니쌀국수\n야채춘권*칠리소스\n명엽채조림\n양파장아찌\n배추김치"
+  },
+  {
+    "date": "2026-03-10",
+    "lunch": "쌀 밥\n아욱국\n제육김치볶음\n온두부\n시금치나물\n쌈배추겉절이\n\n<선택식>\n노량진컵밥\n어묵국\n치커리샐러드\n반달단무지\n배추김치",
+    "dinner": "김밥볶음밥\n우동국물\n떡볶이\n김말이튀김\n그린샐러드*키위드레싱\n배추김치"
+  },
+  {
+    "date": "2026-03-11",
+    "lunch": "쌀 밥\n오징어무국\n순대야채볶음\n어묵맛살볶음\n오이초무침/레몬아이스티\n배추김치\n\n<선택식>\n돈코츠라멘\n타코야끼\n오이초무침\n오복지/레몬아이스티\n배추김치",
+    "dinner": "쌀 밥\n호박고추장찌개\n안동식찜닭\n고구마샐러드\n쌈다시마*초장\n배추김치"
+  },
+  {
+    "date": "2026-03-12",
+    "lunch": "찰현미밥\n닭개장\n동그랑땡전*케찹\n마카로니콘샐러드\n아삭이고추무침\n배추김치\n\n<선택식>\n돈까스정식\n크림스프\n웨지감자*케찹\n마카로니콘샐러드\n배추김치",
+    "dinner": "쌀 밥\n조랭이떡국\n야채쫄면\n건파래볶음\n궁채장아찌\n배추김치"
+  },
+  {
+    "date": "2026-03-13",
+    "lunch": "쌀 밥\n참치김치찌개\n소보로계란장조림\n오젓무말랭이\n봄동유자샐러드\n깍두기\n\n<선택식>\n잔치국수\n새우튀김*타르소스\n봄동유자샐러드\n꼬들단무지\n배추김치",
+    "dinner": "쌀 밥\n순두부찌개\n돈육고추잡채\n꽃 빵\n고춧잎무침\n배추김치"
+  },
+  {
+    "date": "2026-03-14",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-15",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-16",
+    "lunch": "쌀 밥\n김치두부국\n고기산적조림\n청포묵김가루무침\n케요네즈샐러드\n배추김치\n\n<선택식>\n오므라이스\n미소장국\n감자고로케&케찹\n케요네즈샐러드\n배추김치",
+    "dinner": "쌀 밥\n콩나물국\n고등어김치조림\n연두부&양념장\n치커리사과생채\n배추김치"
+  },
+  {
+    "date": "2026-03-17",
+    "lunch": "쌀 밥\n계란파국\n이바돔등뼈찜\n조미김\n부추겉절이\n배추김치\n\n<선택식>\n해물짬뽕\n크림새우탕수육\n모닝빵글레이즈드\n단무지\n배추김치",
+    "dinner": "쌀 밥\n맑은미역국\n마파두부\n군만두&초간장\n숙주나물무침\n배추김치"
+  },
+  {
+    "date": "2026-03-18",
+    "lunch": "쌀 밥\n어묵국\n미트볼라따뚜이\n샐러드파스타\n모듬피클\n배추김치\n\n<선택식>\n후리가케주먹밥\n로제찜닭\n어묵국\n모듬피클\n배추김치",
+    "dinner": "쌀 밥\n순살감자탕\n스크램블에그\n견과류멸치볶음\n오이무침\n배추김치"
+  },
+  {
+    "date": "2026-03-19",
+    "lunch": "콩나물밥&양념장\n시래기된장국\n간장돼지불고기\n브로콜리참깨무침\n무생채/매실에이드\n배추김치\n\n<선택식>\n순대국밥\n해물부추전\n무말랭이\n상추겉절이/매실에이드\n깍두기",
+    "dinner": "쌀 밥\n돈육김치찌개\n버터갈릭치킨너겟\n감자채볶음\n돌나물무침\n배추김치"
+  },
+  {
+    "date": "2026-03-20",
+    "lunch": "쌀 밥\n우거지해장국\n비엔나떡볶음\n호박나물\n그린샐러드\n배추김치\n\n<선택식>\n참치야채비빔밥\n미역국\n모듬튀김강정\n통들깨부추무침\n배추김치",
+    "dinner": "햄야채볶음밥\n유부장국\n함박스테이크조림\n쥐어채볶음\n콘샐러드\n배추김치"
+  },
+  {
+    "date": "2026-03-21",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-22",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-23",
+    "lunch": "쌀 밥\n파개장\n해물야끼우동\n명엽채조림\n치커리샐러드\n배추김치\n\n<선택식>\n스팸마요덮밥\n어묵국\n치즈떡볶이\n치커리샐러드\n배추김치",
+    "dinner": "쌀 밥\n미역국\n제육불고기\n애기새송이버섯볶음\n오리엔탈상추\n배추김치"
+  },
+  {
+    "date": "2026-03-24",
+    "lunch": "찰현미밥\n북어무국\n묵은지닭조림\n모듬콩조림\n오이초무침\n깍두기\n\n<선택식>\n유부가락국수\n새우튀김\n오이초무침\n꼬들단무지\n배추김치",
+    "dinner": "쌀 밥\n고추장수제비국\n피쉬앤칩스*콘소스\n도토리묵무침\n콩나물무침\n배추김치"
+  },
+  {
+    "date": "2026-03-25",
+    "lunch": "쌀 밥\n돈육호박찌개\n참치두부조림\n남포동비빔당면\n간장고추지/파인애플에이드\n배추김치\n\n<선택식>\n돈까스김치나베\n고구마맛탕\n마카로니샐러드\n파인애플에이드\n깍두기",
+    "dinner": "쌀 밥\n미니온메밀\n왕만두*초간장\n매운어묵볶음\n흑임자양배추샐러드\n배추김치"
+  },
+  {
+    "date": "2026-03-26",
+    "lunch": "쌀 밥\n우동국물\n카레소스\n칠리깐풍기\n단무지무침\n배추김치\n\n<선택식>\n전주식콩나물국밥\n야채고로케*케찹\n부추겉절이\n오이고추장아찌\n깍두기",
+    "dinner": "영양밥\n미소장국\n부대볶음\n구운김*양념장\n바나나\n배추김치"
+  },
+  {
+    "date": "2026-03-27",
+    "lunch": "봄나물비빔밥*고추장\n얼갈이된장국\n계란후라이\n콩가루모닝빵\n요구르트\n배추김치\n\n<선택식>\n탄탄면\n후르츠탕수육\n그린샐러드\n오복지무침/요구르트\n배추김치",
+    "dinner": "쌀 밥\n순두부찌개\n청양마요미트볼\n파래자반무침\n무생채\n배추김치"
+  },
+  {
+    "date": "2026-03-28",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-29",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-30",
+    "lunch": "쌀 밥\n김치콩나물국\n돈채짜장볶음\n김말이튀김\n단무지\n배추김치\n\n<선택식>\n투움바파스타\n양송이스프\n불고기퀘사디아\n오이피클\n배추김치",
+    "dinner": "흑미밥\n사골만둣국\n돈육메추리알조림\n미역줄기볶음\n조미김\n배추김치"
+  },
+  {
+    "date": "2026-03-31",
+    "lunch": "쌀 밥\n소고기무국\n햄감자조림\n들기름막국수\n고추장아찌\n배추김치\n\n<선택식>\n김치볶음밥\n유부장국\n설탕핫도그\n계란후라이/사과주스\n깍두기",
+    "dinner": "쌀 밥\n영양닭죽\n야채튀김&초간장\n어묵볶음\n참나물무침\n깍두기"
+  },
+  {
+    "date": "2026-04-01",
+    "lunch": "쌀 밥\n시래기된장국\n제육볶음\n상추쌈&쌈장\n숙주나물\n배추김치\n\n<선택식>\n순두부라면\n사각햄전&케찹\n코울슬로\n단무지\n배추김치",
+    "dinner": "고추장참치비빔밥\n계란국\n어니언치킨까스\n새싹연두부\n열무겉절이\n배추김치"
+  },
+  {
+    "date": "2026-04-02",
+    "lunch": "쌀 밥\n미니잔치국수\n셀프꼬마김밥\n구운김&겨자소스\n치커리샐러드/레몬아이스티\n배추김치\n\n<선택식>\n닭갈비덮밥\n콩나물국\n야채계란찜\n치커리샐러드/레몬아이스티\n배추김치",
+    "dinner": "쌀 밥\n미역국\n바베큐폭찹\n식빵튀김\n오이양파무침\n배추김치"
+  },
+  {
+    "date": "2026-04-03",
+    "lunch": "쌀 밥\n육개장\n너비아니파채구이\n한식잡채\n그린샐러드\n배추김치\n\n<선택식>\n김가루주먹밥\n바지락칼국수\n알감자버터구이\n쌈배추겉절이\n배추김치",
+    "dinner": "쌀 밥\n김치찌개\n백순대야채볶음\n쥐어채조림\n양념깻잎지\n배추김치"
+  },
+  {
+    "date": "2026-04-04",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-05",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-06",
+    "lunch": "쌀 밥\n미역국\n마파두부\n생선까스*타르소스\n오이초무침\n배추김치\n\n<선택식>\n김치잔치국수\n고기만두*초간장\n쫄단무지\n흑임자양배추샐러드\n열무겉절이",
+    "dinner": "쌀 밥\n홍합무국\n불닭맛돼지불고기\n천사채샐러드\n오리엔탈상추\n배추김치"
+  },
+  {
+    "date": "2026-04-07",
+    "lunch": "냉이밥*양념장\n얼갈이된장국\n고등어김치조림\n감자채햄볶음\n궁채장아찌/매실차\n배추김치\n\n<선택식>\n눈꽃치즈돈까스\n단호박스프\n마카로니샐러드\n오이지무침/매실차\n배추김치",
+    "dinner": "쌀 밥\n뼈다귀감자탕\n옥수수콘전\n꽈리멸치볶음\n아삭이고추무침\n배추김치"
+  },
+  {
+    "date": "2026-04-08",
+    "lunch": "쌀 밥\n어묵국\n국물떡볶이\n찰순대*꽃소금\n세발김가루무침\n배추김치\n\n<선택식>\n참치야채비빔밥\n어묵국\n달걀장조림\n오복지/벚꽃요거트\n배추김치",
+    "dinner": "쌀 밥\n우동국물\n하이라이스\n허니간장모듬튀김\n단무지무침\n배추김치"
+  },
+  {
+    "date": "2026-04-09",
+    "lunch": "쌀 밥\n얼큰콩나물국\n바베큐찜닭\n애느타리버섯무침\n참나물샐러드\n배추김치\n\n<선택식>\n나시고랭볶음밥\n쌀국수\n춘권*칠리소스\n참나물샐러드\n배추김치",
+    "dinner": "김치볶음밥\n미소장국\n계란후라이\n치즈스틱\n그린샐러드\n깍두기"
+  },
+  {
+    "date": "2026-04-10",
+    "lunch": "쌀 밥\n사골우거지국\n미트볼토마토조림\n들기름깻잎파스타\n숙주나물\n배추김치\n\n<선택식>\n설렁탕\n메밀전병\n양파장아찌\n부추겉절이\n깍두기",
+    "dinner": "쌀 밥\n닭곰탕\n건파래볶음\n비빔국수\n간장고추지\n깍두기"
+  },
+  {
+    "date": "2026-04-11",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-12",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-13",
+    "lunch": "쌀 밥\n조랭이떡국\n고기산적델리조림\n명엽채볶음\n치커리사과무침\n배추김치\n\n<선택식>\n묵은지참치말이\n유부우동\n치커리사과무침\n꼬들단무지\n배추김치",
+    "dinner": "콩나물밥&양념장\n아욱된장국\n소세지브로콜리볶음\n시금치나물\n무말랭이\n배추김치"
+  },
+  {
+    "date": "2026-04-14",
+    "lunch": "쌀 밥\n계란국\n카레소스\n미니돈까스\n단무지무침\n배추김치\n\n<선택식>\n치킨마요덮밥\n계란국\n모닝빵&사과잼\n오이초무침\n배추김치",
+    "dinner": "쌀 밥\n북어무국\n김치돈불고기\n청포묵무침\n다시마쌈&초장\n배추겉절이"
+  },
+  {
+    "date": "2026-04-15",
+    "lunch": "찰현미밥\n맑은순두부국\n김풍비빔파스타\n군만두&초간장\n코울슬로\n배추김치\n\n<선택식>\n부대찌개&라면사리\n야채계란말이\n검은콩자반\n코울슬로\n깍두기",
+    "dinner": "쌀 밥\n냉이된장국\n비빔나물&약고추장\n(콩나물·무생채·애호박볶음)\n설탕꽈배기\n블루베리에이드\n배추김치"
+  },
+  {
+    "date": "2026-04-16",
+    "lunch": "쌀 밥\n콩나물국\n닭볶음탕\n김자반볶음\n오리엔탈부추무침\n배추김치\n\n<선택식>\n가츠동\n미니냉모밀\n푸실리샐러드\n오이피클\n배추김치",
+    "dinner": "쌀 밥\n참치김치찌개\n크림떡볶이\n어묵볶음\n수제모듬피클\n배추김치"
+  },
+  {
+    "date": "2026-04-17",
+    "lunch": "쌀 밥\n해물짬뽕국\n후르츠탕수육\n새송이버섯볶음\n반달단무지\n배추김치\n\n<선택식>\n소세지오므라이스\n우동국물\n고구마샐러드\n단무지/사과주스\n배추김치",
+    "dinner": "쌀 밥\n들깨미역국\n돈채숙주볶음\n연두부&양념장\n청경채나물\n배추김치"
+  },
+  {
+    "date": "2026-04-18",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-19",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-20",
+    "lunch": "쌀 밥\n미역국\n바싹불고기\n메밀막국수\n모듬쌈*쌈장\n배추김치\n\n<선택식>\n소보로덮밥\n미소장국\n고구마고로케*케찹\n치커리무침/짜요짜요\n깍두기",
+    "dinner": "베이컨마늘필라프\n맑은우동국\n김치치즈함박스테이크\n마카로니샐러드\n단무지무침\n배추김치"
+  },
+  {
+    "date": "2026-04-21",
+    "lunch": "쌀 밥\n김치찌개\n코다리엿장조림\n비엔나펜네볶음\n백오이무침\n깍두기\n\n<선택식>\n베테랑칼국수\n물만두*초간장\n백오이무침\n꼬들단무지\n쌈배추겉절이",
+    "dinner": "쌀 밥\n콩나물국\n순대야채볶음\n양념깻잎지\n그린샐러드*키위드레싱\n배추김치"
+  },
+  {
+    "date": "2026-04-22",
+    "lunch": "쌀 밥\n육개장\n누들떡잡채\n쥐어채볶음\n오리엔탈상추무침\n배추김치\n\n<선택식>\n돈까스정식\n크림스프\n콘샐러드\n오이피클\n배추김치",
+    "dinner": "쌀 밥\n고추장호박찌개\n안동찜닭\n칠리볼어묵볶음\n숙주나물\n배추김치"
+  },
+  {
+    "date": "2026-04-23",
+    "lunch": "쌀 밥\n순살감자탕\n분홍소세지전\n조미구이김\n시금치나물/짜요짜요\n배추김치\n\n<선택식>\n유니짜장면\n계란국\n유린기\n단무지/짜요짜요\n배추김치",
+    "dinner": "쌀 밥\n사골우거지국\n두부커틀렛*소스\n야채쫄면\n유채나물\n배추김치"
+  },
+  {
+    "date": "2026-04-24",
+    "lunch": "곤드레밥*양념장\n얼갈이된장국\n모듬장조림\n미역줄기볶음\n무말랭이\n배추김치\n\n<선택식>\n날치알김치볶음밥\n어묵국\n핫도그*케찹\n나쵸샐러드\n깍두기",
+    "dinner": "쌀 밥\n해장라면\n계란볶이\n알감자버터구이\n참나물샐러드\n배추김치"
+  },
+  {
+    "date": "2026-04-25",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-26",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-27",
+    "lunch": "잡곡밥\n소고기무국\n참치두부조림\n감자채볶음\n부추겉절이\n배추김치\n\n<선택식>\n치즈닭갈비덮밥\n맑은무채국\n김말이튀김&초간장\n부추겉절이\n배추김치",
+    "dinner": "쌀 밥\n유부김칫국\n가쓰오야끼우동\n도토리묵무침\n간장고추지\n배추김치"
+  },
+  {
+    "date": "2026-04-28",
+    "lunch": "쌀 밥\n시금치된장국\n제육볶음\n양배추쌈&쌈장\n숙주나물\n배추김치\n\n<선택식>\n봉골레파스타\n콩나물국\n또띠아피자\n수제모듬피클\n배추김치",
+    "dinner": "쌀 밥\n부대찌개\n고등어카레구이\n김자반볶음\n무생채\n배추김치"
+  },
+  {
+    "date": "2026-04-29",
+    "lunch": "햄야채볶음밥\n어묵무국\n치킨너겟&머스타드\n새송이짬뽕볶음\n치커리샐러드\n배추김치\n\n<선택식>\n깍두기볶음밥\n어묵무국\n베이컨로제떡볶이\n치커리샐러드\n배추김치",
+    "dinner": "쌀 밥\n미역국\n매운등뼈찜\n단호박범벅\n오이무침\n배추김치"
+  },
+  {
+    "date": "2026-04-30",
+    "lunch": "쌀 밥\n팽이장국\n토마토시금치카레\n칠리깐풍기\n단무지/냉미숫가루\n배추김치\n\n<선택식>\n잔치국수\n김가루주먹밥\n새우까스&콘마요소스\n단무지/냉미숫가루\n배추김치",
+    "dinner": "쌀 밥\n영양닭죽\n해물김치전\n오젓무말랭이\n양상추샐러드\n깍두기"
+  },
+  {
+    "date": "2026-05-01",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-02",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-03",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-04",
+    "lunch": "쌀 밥\n김칫국\n짜장소스\n맛동산탕수육\n단무지무침\n배추김치\n\n<선택식>\n마제소바\n우동국물\n고로케*케찹\n열대과일샐러드\n배추김치",
+    "dinner": "쌀 밥\n순대국\n계란말이\n어묵볶음\n양파장아찌\n배추김치"
+  },
+  {
+    "date": "2026-05-05",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-06",
+    "lunch": "뿌리채소영양밥\n냉이된장국\n부대볶음\n구이김*양념장\n치커리샐러드/매실차\n배추김치\n\n<선택식>\n크림스파게티\n쇠고기스프\n해쉬브라운피자\n오이피클/매실차\n배추김치",
+    "dinner": "쌀 밥\n순두부찌개\n돈채굴소스볶음\n한식잡채\n고춧잎무침\n배추김치"
+  },
+  {
+    "date": "2026-05-07",
+    "lunch": "쌀 밥\n건새우미역국\n묵은지닭조림\n콩나물무침\n하트떡라면땅\n깍두기\n\n<선택식>\n상추튀김\n어묵무국\n떡볶이\n꼬들단무지\n배추김치",
+    "dinner": "쌀 밥\n아욱국\n비빔나물*약고추장\n모닝빵샌드위치\n요구르트\n배추김치"
+  },
+  {
+    "date": "2026-05-08",
+    "lunch": "쌀 밥\n육개장칼국수\n고기산적구이\n파채부추겉절이\n오복지\n배추김치\n\n<선택식>\n오므라이스\n미소장국\n새우튀김*타르소스\n오복지\n배추김치",
+    "dinner": "쌀 밥\n북어무국\n이장우장조림비빔소스\n양념순두부\n청경채나물\n배추김치"
+  },
+  {
+    "date": "2026-05-09",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-10",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-11",
+    "lunch": "쌀 밥\n돼지김치짜글이\n생선까스&타르소스\n검은콩조림\n오이무침\n배추김치\n\n<선택식>\n돈코츠라멘\n타코야끼\n코울슬로\n오이무침\n배추김치",
+    "dinner": "쌀 밥\n콩나물국\n간장돼지불고기\n쥐어채볶음\n무생채\n배추김치"
+  },
+  {
+    "date": "2026-05-12",
+    "lunch": "쌀 밥\n유부장국\n마라마파두부\n햄감자조림\n조미김\n배추김치\n\n<선택식>\n참치김치덮밥\n유부장국\n설탕핫도그\n마카로니범벅/망고주스\n깍두기",
+    "dinner": "쌀 밥\n계란국\n단호박카레소스\n야채쫄면\n그린샐러드&키위드레싱\n배추김치"
+  },
+  {
+    "date": "2026-05-13",
+    "lunch": "쌀 밥\n근대된장국\n바베큐폭찹\n연두부&양념장\n아삭고추무침\n배추김치\n\n<선택식>\n짜계치(짜장라면·계란·치즈)\n순두부국\n모듬튀김강정\n딸기잼모닝빵/단무지\n배추김치",
+    "dinner": "김밥볶음밥\n옹심이만둣국\n로제떡볶이\n숙주나물\n치커리유자무침\n배추김치"
+  },
+  {
+    "date": "2026-05-14",
+    "lunch": "쌀 밥\n소고기무국\n미트볼그라탕\n들기름깻잎파스타\n건새우호박볶음\n배추김치\n\n<선택식>\n새우볶음밥\n미소장국\n치킨텐더또띠아\n오이피클\n배추김치",
+    "dinner": "쌀 밥\n고추장수제비\n마약계란장\n어묵볶음\n도토리묵무침\n배추김치"
+  },
+  {
+    "date": "2026-05-15",
+    "lunch": "쌀 밥\n미역국\n매콤간장찜닭\n식빵튀김\n부추겉절이\n배추김치\n\n<선택식>\n땡초주먹밥\n김치가락국수\n고기손만두&간장\n단무지무침\n쌈배추겉절이",
+    "dinner": "쌀 밥\n부대찌개\n동그랑땡전&케찹\n콩나물무침\n고추장아찌\n배추김치"
+  },
+  {
+    "date": "2026-05-16",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-17",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-18",
+    "lunch": "쌀 밥\n소고기무국\n순대야채볶음\n명엽채조림\n도라지오이무침\n배추김치\n\n<선택식>\n돈까스정식\n크림스프\n마카로니샐러드\n스틱단무지\n배추김치",
+    "dinner": "쌀 밥\n나가사끼짬뽕국\n청양풍볶음우동\n짜사이무침\n치커리샐러드\n배추김치"
+  },
+  {
+    "date": "2026-05-19",
+    "lunch": "쌀 밥\n순두부국\n제육불고기\n양배추쌈*쌈장\n콩나물맛살겨자무침\n배추김치\n\n<선택식>\n스팸마요덮밥\n미소장국\n국물떡볶이\n백오이무침\n배추김치",
+    "dinner": "고깃집마무리볶음밥\n호박된장국\n허니버터치킨너겟\n옥수수콘샐러드\n양념고추지\n배추김치"
+  },
+  {
+    "date": "2026-05-20",
+    "lunch": "쌀 밥\n김치찌개\n코다리시래기조림\n도시락김/복숭아아이스티\n알리오올리오펜네\n깍두기\n\n<선택식>\n베테랑칼국수\n메밀전병\n아삭이고추무침\n단무지/복숭아아이스티\n쌈배추겉절이",
+    "dinner": "쌀 밥\n계란국\n매운고추잡채\n연유꽃빵\n브로콜리숙회\n배추김치"
+  },
+  {
+    "date": "2026-05-21",
+    "lunch": "흑미밥\n순살감자탕\n궁중떡볶이\n건새우마늘쫑볶음\n애느타리초무침\n배추김치\n\n<선택식>\n지코바치밥\n어묵무국\n알감자버터구이\n참나물샐러드\n배추김치",
+    "dinner": "쌀 밥\n유부우동국\n하이라이스\n모듬튀김*소스\n실곤약초무침\n배추김치"
+  },
+  {
+    "date": "2026-05-22",
+    "lunch": "쌀 밥\n닭곰탕\n애기새송이튀김*초간장\n사각어묵볶음\n양념깻잎지\n배추김치\n\n<선택식>\n열무김치냉국수\n왕만두*초간장\n사각어묵볶음\n쫄단무지\n배추김치",
+    "dinner": "쌀 밥\n미역국\n떡갈비\n야채계란찜\n부추겉절이\n배추김치"
+  },
+  {
+    "date": "2026-05-23",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-24",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-25",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-26",
+    "lunch": "쌀 밥\n계란국\n돈채짜장볶음\n레몬크림탕수육\n단무지무침\n배추김치\n\n<선택식>\n날치알주먹밥\n양송이스프\n베이컨토마토스파게티\n스마일감자튀김/오이피클\n배추김치",
+    "dinner": "표고콩나물밥\n들깨미역국\n비엔나어묵볶음\n구운김&양념장\n오이부추무침\n배추김치"
+  },
+  {
+    "date": "2026-05-27",
+    "lunch": "쌀 밥\n콩나물국\n강된장두부소스\n칼비빔면\n그린샐러드\n배추김치\n\n<선택식>\n돈까스김치나베\n모닝빵샌드위치\n고구마샐러드\n사과주스\n배추김치",
+    "dinner": "쌀 밥\n시래기된장국\n오삼불고기\n모듬쌈&쌈장\n견과류콩조림\n배추김치"
+  },
+  {
+    "date": "2026-05-28",
+    "lunch": "병아리콩밥\n북엇국\n묵은지등뼈찜\n건파래볶음\n미역줄기볶음\n깍두기\n\n<선택식>\n계란볶음밥\n베트남쌀국수\n춘권&사모사튀김\n오이맛살냉채\n배추김치",
+    "dinner": "쌀 밥\n유부장국\n청양크림함박\n오색탕평채\n수제모듬피클\n배추김치"
+  },
+  {
+    "date": "2026-05-29",
+    "lunch": "쌀 밥\n부대찌개\n미니돈까스&소스\n감자채볶음\n상추겉절이\n배추김치\n\n<선택식>\n참치야채비빔밥\n맑은무채국\n감자고로케\n계란후라이/요구르트\n배추김치",
+    "dinner": "쌀 밥\n영양닭죽\n고기&김치만두\n메추리알곤약조림\n오짓어젓갈\n깍두기"
+  },
+  {
+    "date": "2026-05-30",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-31",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-01",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-02",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-03",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-04",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-05",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-06",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-07",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  }
+];
+
+    const chatWindow = document.getElementById("chatWindow");
+    const userInput = document.getElementById("userInput");
+    const sendButton = document.getElementById("sendButton");
+    const guideChips = document.querySelectorAll(".guide-chip");
+
+    function normalizeText(text) {
+      return String(text).replace(/\s/g, "").toLowerCase();
+    }
+
+    function formatDateToYMD(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function formatYMDToKorean(ymd) {
+      const [year, month, day] = ymd.split("-");
+      return `${year}년 ${Number(month)}월 ${Number(day)}일`;
+    }
+
+    function formatAcademicDate(schedule) {
+      const start = formatYMDToKorean(schedule.startDate);
+      return schedule.endDate ? `${start} ~ ${formatYMDToKorean(schedule.endDate)}` : start;
+    }
+
+    function cloneDate(date) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function koreanNumberToValue(word) {
+      const numberMap = {
+        "하루": 1, "하룻": 1, "한": 1, "일": 1, "하나": 1, "첫": 1,
+        "이틀": 2, "이": 2, "두": 2, "둘": 2,
+        "사흘": 3, "삼": 3, "세": 3, "셋": 3,
+        "나흘": 4, "사": 4, "네": 4, "넷": 4,
+        "닷새": 5, "닷세": 5, "오": 5, "다섯": 5,
+        "엿새": 6, "엿세": 6, "육": 6, "여섯": 6,
+        "이레": 7, "칠": 7, "일곱": 7,
+        "여드레": 8, "팔": 8, "여덟": 8,
+        "아흐레": 9, "구": 9, "아홉": 9,
+        "열흘": 10, "열": 10, "십": 10,
+        "일주일": 7, "한주": 7, "한주일": 7, "두주": 14, "두주일": 14,
+        "보름": 15, "반달": 15
+      };
+      if (/^[0-9]+$/.test(word)) return Number(word);
+      return numberMap[word] || null;
+    }
+
+    function extractDateFromQuestion(question) {
+      const today = new Date();
+      const normalized = normalizeText(question);
+
+      const fullDateMatch = question.match(/([0-9]{4})[-.년 ]*([0-9]{1,2})[-.월 ]*([0-9]{1,2})/);
+      if (fullDateMatch) {
+        return formatDateToYMD(new Date(Number(fullDateMatch[1]), Number(fullDateMatch[2]) - 1, Number(fullDateMatch[3])));
+      }
+
+      const monthDayMatch = question.match(/([0-9]{1,2})\s*월\s*([0-9]{1,2})\s*일/);
+      if (monthDayMatch) {
+        return formatDateToYMD(new Date(today.getFullYear(), Number(monthDayMatch[1]) - 1, Number(monthDayMatch[2])));
+      }
+
+      const fixedRelativeWords = [
+        { words: ["오늘", "금일"], days: 0 },
+        { words: ["어제", "작일"], days: -1 },
+        { words: ["그제", "그저께", "엊그제", "엊그저께", "엊그제네"], days: -2 },
+        { words: ["그끄제", "그끄저께"], days: -3 },
+        { words: ["내일", "명일"], days: 1 },
+        { words: ["모레", "내일모레"], days: 2 },
+        { words: ["글피"], days: 3 },
+        { words: ["그글피"], days: 4 }
+      ];
+
+      for (const item of fixedRelativeWords) {
+        if (item.words.some((word) => normalized.includes(word))) {
+          const targetDate = cloneDate(today);
+          targetDate.setDate(targetDate.getDate() + item.days);
+          return formatDateToYMD(targetDate);
+        }
+      }
+
+      if (normalized.includes("지난주") || normalized.includes("저번주") || normalized.includes("전주")) {
+        const targetDate = cloneDate(today);
+        targetDate.setDate(targetDate.getDate() - 7);
+        return formatDateToYMD(targetDate);
+      }
+
+      if (normalized.includes("다음주") || normalized.includes("담주")) {
+        const targetDate = cloneDate(today);
+        targetDate.setDate(targetDate.getDate() + 7);
+        return formatDateToYMD(targetDate);
+      }
+
+      if (normalized.includes("이번주") || normalized.includes("금주")) return formatDateToYMD(today);
+
+      if (normalized.includes("지난달") || normalized.includes("저번달") || normalized.includes("전달")) {
+        const targetDate = cloneDate(today);
+        targetDate.setMonth(targetDate.getMonth() - 1);
+        return formatDateToYMD(targetDate);
+      }
+
+      if (normalized.includes("다음달") || normalized.includes("내달")) {
+        const targetDate = cloneDate(today);
+        targetDate.setMonth(targetDate.getMonth() + 1);
+        return formatDateToYMD(targetDate);
+      }
+
+      if (normalized.includes("이번달") || normalized.includes("금월")) return formatDateToYMD(today);
+
+      const standaloneDurationDays = {
+        "하루": 1, "하룻": 1, "이틀": 2, "사흘": 3, "나흘": 4,
+        "닷새": 5, "닷세": 5, "엿새": 6, "엿세": 6, "이레": 7,
+        "여드레": 8, "아흐레": 9, "열흘": 10, "일주일": 7,
+        "한주": 7, "한주일": 7, "두주": 14, "두주일": 14,
+        "보름": 15, "반달": 15
+      };
+      const standaloneDurationPattern = "일주일|한주일|두주일|열흘|아흐레|여드레|이틀|사흘|나흘|닷새|닷세|엿새|엿세|이레|하룻|하루|한주|두주|보름|반달";
+      const standaloneDurationRegex = new RegExp(`(${standaloneDurationPattern})(전|이전|전날|후|뒤|이후)`);
+      const standaloneDurationMatch = standaloneDurationRegex.exec(normalized);
+      if (standaloneDurationMatch) {
+        const days = standaloneDurationDays[standaloneDurationMatch[1]];
+        const sign = standaloneDurationMatch[2].includes("전") || standaloneDurationMatch[2].includes("이전") ? -1 : 1;
+        const targetDate = cloneDate(today);
+        targetDate.setDate(targetDate.getDate() + sign * days);
+        return formatDateToYMD(targetDate);
+      }
+
+      const numberPattern = "[0-9]+|하루|하룻|한|일|하나|첫|이틀|이|두|둘|사흘|삼|세|셋|나흘|사|네|넷|닷새|닷세|오|다섯|엿새|엿세|육|여섯|이레|칠|일곱|여드레|팔|여덟|아흐레|구|아홉|열흘|열|십|일주일|한주일|한주|두주일|두주|보름|반달";
+      const relativeRegex = new RegExp(`(${numberPattern})(일|하루|날|주|주일|주간|달|개월|월|년|해)(전|이전|전날|후|뒤|이후)`);
+      const relativeMatch = relativeRegex.exec(normalized);
+
+      if (relativeMatch) {
+        const amount = koreanNumberToValue(relativeMatch[1]);
+        const unit = relativeMatch[2];
+        const direction = relativeMatch[3];
+        const targetDate = cloneDate(today);
+        if (amount === null) return null;
+
+        const sign = direction.includes("전") || direction.includes("이전") ? -1 : 1;
+        if (unit === "일" || unit === "하루" || unit === "날") targetDate.setDate(targetDate.getDate() + sign * amount);
+        else if (unit === "주" || unit === "주일" || unit === "주간") targetDate.setDate(targetDate.getDate() + sign * amount * 7);
+        else if (unit === "달" || unit === "개월" || unit === "월") targetDate.setMonth(targetDate.getMonth() + sign * amount);
+        else if (unit === "년" || unit === "해") targetDate.setFullYear(targetDate.getFullYear() + sign * amount);
+
+        return formatDateToYMD(targetDate);
+      }
+
+      return null;
+    }
+
+    function extractMealType(question) {
+      const normalized = normalizeText(question);
+      if (normalized.includes("중식") || normalized.includes("점심") || normalized.includes("낮밥")) return "lunch";
+      if (normalized.includes("석식") || normalized.includes("저녁") || normalized.includes("저녁밥")) return "dinner";
+      return "all";
+    }
+
+    function isMealQuestion(question) {
+      const normalized = normalizeText(question);
+      const mealKeywords = ["식단", "메뉴", "밥", "중식", "점심", "석식", "저녁", "기숙사", "백학사", "식당"];
+      return mealKeywords.some((keyword) => normalized.includes(keyword));
+    }
+
+    function findAcademicSchedules(question) {
+      const normalizedQuestion = normalizeText(question);
+      return academicSchedules.filter((schedule) => {
+        const titleMatched = normalizedQuestion.includes(normalizeText(schedule.title));
+        const keywordMatched = schedule.keywords.some((keyword) => {
+          const normalizedKeyword = normalizeText(keyword);
+          return normalizedQuestion.includes(normalizedKeyword) || normalizedKeyword.includes(normalizedQuestion);
+        });
+        return titleMatched || keywordMatched;
+      });
+    }
+
+    function isDateInsideSchedule(targetDate, schedule) {
+      const target = new Date(targetDate);
+      const start = new Date(schedule.startDate);
+      const end = schedule.endDate ? new Date(schedule.endDate) : new Date(schedule.startDate);
+      return start <= target && target <= end;
+    }
+
+    function findAcademicSchedulesByDate(targetDate) {
+      return academicSchedules.filter((schedule) => isDateInsideSchedule(targetDate, schedule));
+    }
+
+    function createAcademicResponse(question) {
+      const targetDate = extractDateFromQuestion(question);
+      let matchedSchedules = [];
+
+      if (targetDate) {
+        matchedSchedules = findAcademicSchedulesByDate(targetDate);
+        if (matchedSchedules.length === 0) return `${formatYMDToKorean(targetDate)}에 해당하는 학사일정을 찾지 못했습니다.`;
+      } else {
+        matchedSchedules = findAcademicSchedules(question);
+        if (matchedSchedules.length === 0) return "해당하는 학사일정을 찾지 못했습니다.";
+      }
+
+      let response = targetDate
+        ? `${formatYMDToKorean(targetDate)} 학사일정은 다음과 같습니다.\n\n`
+        : "찾으신 학사일정은 다음과 같습니다.\n\n";
+
+      matchedSchedules.forEach((schedule, index) => {
+        response += `${index + 1}. ${formatAcademicDate(schedule)}\n`;
+        response += `- 일정: ${schedule.title}\n`;
+        response += `- 안내: ${schedule.description}`;
+        if (index !== matchedSchedules.length - 1) response += "\n\n";
+      });
+      return response;
+    }
+
+    function createMealResponse(question) {
+      const targetDate = extractDateFromQuestion(question);
+      const mealType = extractMealType(question);
+      const finalDate = targetDate || formatDateToYMD(new Date());
+      const meal = mealData.find((item) => item.date === finalDate);
+
+      if (!meal) return NO_MEAL_TEXT;
+
+      if (mealType === "lunch") {
+        if (!meal.lunch || meal.lunch === NO_MEAL_TEXT) return NO_MEAL_TEXT;
+        return `${formatYMDToKorean(finalDate)} 중식 메뉴입니다.\n- ${meal.lunch}`;
+      }
+
+      if (mealType === "dinner") {
+        if (!meal.dinner || meal.dinner === NO_MEAL_TEXT) return NO_MEAL_TEXT;
+        return `${formatYMDToKorean(finalDate)} 석식 메뉴입니다.\n- ${meal.dinner}`;
+      }
+
+      const lunchEmpty = !meal.lunch || meal.lunch === NO_MEAL_TEXT;
+      const dinnerEmpty = !meal.dinner || meal.dinner === NO_MEAL_TEXT;
+      if (lunchEmpty && dinnerEmpty) return NO_MEAL_TEXT;
+
+      let response = `${formatYMDToKorean(finalDate)} 기숙사 식단입니다.\n\n`;
+      response += `- 중식: ${lunchEmpty ? NO_MEAL_TEXT : meal.lunch}\n\n`;
+      response += `- 석식: ${dinnerEmpty ? NO_MEAL_TEXT : meal.dinner}`;
+      return response;
+    }
+
+    function createBotResponse(question) {
+      if (isMealQuestion(question)) return createMealResponse(question);
+      return createAcademicResponse(question);
+    }
+
+    function addMessage(sender, text) {
+      const row = document.createElement("div");
+      row.className = `message-row ${sender}`;
+      const message = document.createElement("div");
+      message.className = `message ${sender}`;
+      message.textContent = text;
+      row.appendChild(message);
+      chatWindow.appendChild(row);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function handleSendMessage() {
+      const question = userInput.value.trim();
+      if (question === "") {
+        addMessage("bot", "질문을 입력해 주세요. 예: 어제 식단");
+        return;
+      }
+      addMessage("user", question);
+      userInput.value = "";
+      addMessage("bot", createBotResponse(question));
+    }
+
+    sendButton.addEventListener("click", handleSendMessage);
+    userInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") handleSendMessage();
+    });
+    guideChips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        userInput.value = chip.textContent;
+        handleSendMessage();
+      });
+    });
+
+    console.log("조선대 플러스+ 로드 완료. 식단 데이터:", mealData.length, "개");
+  </script>
+
+<!-- 02_UI_패치
+     기존 index.html 코드 아래쪽, 가능하면 </body> 바로 위에 붙여넣으세요.
+     제목 아래 예시 줄을 제거하고, 퀵 메뉴 버튼을 다시 구성합니다.
+-->
+<script>
+(() => {
+  // 제목 아래 설명에서 '예: 중간고사 언제야?...' 줄 삭제
+  const headerText = document.querySelector(".header p");
+  if (headerText) {
+    headerText.textContent = "학사일정과 기숙사 식단을 한 번에 검색할 수 있습니다.";
+  }
+
+  // 퀵 메뉴 버튼 재구성
+  // 삭제: 방학, 4월 17일 식단, 4월 17일 중식, 이틀 전 식단
+  // 추가: 어제 식단
+  const quickGuide = document.querySelector(".quick-guide");
+  if (quickGuide) {
+    const buttons = ["중간고사", "개강일", "복수전공", "오늘 식단", "어제 식단"];
+
+    quickGuide.innerHTML = buttons
+      .map((text) => `<button class="guide-chip" type="button">${text}</button>`)
+      .join("");
+
+    // innerHTML로 버튼을 새로 만들었으므로 클릭 이벤트도 다시 연결
+    quickGuide.querySelectorAll(".guide-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        userInput.value = chip.textContent;
+        handleSendMessage();
+      });
+    });
+  }
+
+  console.log("조선대 플러스+ UI 패치 적용 완료");
+})();
+</script>
+
+<!-- 2026_03 백학사 식단 데이터 패치
+     기존 index.html 코드 아래쪽, 가능하면 </body> 바로 위에 붙여넣으세요.
+     이 블록은 mealData에 식단을 추가/덮어쓰기합니다.
+-->
+<script>
+(() => {
+  const PATCH_MEALS = [
+  {
+    "date": "2026-03-02",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-03",
+    "lunch": "쌀 밥\n시금치된장국\n제육볶음\n모듬쌈&쌈장\n무생채\n배추김치\n\n<선택식>\n토마토스파게티\n크림스프\n미니돈까스샐러드\n딸기잼모닝빵\n오이피클\n배추김치",
+    "dinner": "쌀 밥\n김치콩나물국\n궁중떡볶이\n고구마맛탕\n오이무침\n배추김치"
+  },
+  {
+    "date": "2026-03-04",
+    "lunch": "쌀 밥\n미역국\n소세지야채볶음\n한식잡채\n도토리묵무침\n배추김치\n\n<선택식>\n김치볶음밥\n미역국\n치즈스틱/계란후라이\n치커리샐러드\n블루베리에이드\n깍두기",
+    "dinner": "흑미밥\n맑은순두부국\n닭볶음탕\n볼어묵볶음\n숙주나물\n배추김치"
+  },
+  {
+    "date": "2026-03-05",
+    "lunch": "쌀 밥\n소고기무국\n돈육모듬장조림\n구운김&양념장\n봄동겉절이\n배추김치\n\n<선택식>\n김가루주먹밥\n바지락칼국수\n왕만두&초간장\n봄동겉절이\n요구르트\n배추김치",
+    "dinner": "쌀 밥\n계란파국\n카레소스\n생선까스&타르소스\n단무지무침\n배추김치"
+  },
+  {
+    "date": "2026-03-06",
+    "lunch": "쌀 밥\n부대찌개\n치킨너겟&머스타드\n감자채볶음\n호박나물\n배추김치\n\n<선택식>\n설렁탕&소면사리\n메밀전병\n마카로니샐러드\n부추겉절이\n깍두기",
+    "dinner": "쌀 밥\n팽이두부장국\n비빔나물\n(콩나물·무생채·상추채/약고추장)\n설탕핫도그\n후식 귤\n배추김치"
+  },
+  {
+    "date": "2026-03-07",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-08",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-09",
+    "lunch": "쌀 밥\n계란파국\n짜장소스\n만두탕수\n콩나물유부냉채\n배추김치\n\n<선택식>\n봉골레파스타\n쇠고기스프\n또띠아피자\n오이피클/요구르트\n배추김치",
+    "dinner": "쌀 밥\n미니쌀국수\n야채춘권*칠리소스\n명엽채조림\n양파장아찌\n배추김치"
+  },
+  {
+    "date": "2026-03-10",
+    "lunch": "쌀 밥\n아욱국\n제육김치볶음\n온두부\n시금치나물\n쌈배추겉절이\n\n<선택식>\n노량진컵밥\n어묵국\n치커리샐러드\n반달단무지\n배추김치",
+    "dinner": "김밥볶음밥\n우동국물\n떡볶이\n김말이튀김\n그린샐러드*키위드레싱\n배추김치"
+  },
+  {
+    "date": "2026-03-11",
+    "lunch": "쌀 밥\n오징어무국\n순대야채볶음\n어묵맛살볶음\n오이초무침/레몬아이스티\n배추김치\n\n<선택식>\n돈코츠라멘\n타코야끼\n오이초무침\n오복지/레몬아이스티\n배추김치",
+    "dinner": "쌀 밥\n호박고추장찌개\n안동식찜닭\n고구마샐러드\n쌈다시마*초장\n배추김치"
+  },
+  {
+    "date": "2026-03-12",
+    "lunch": "찰현미밥\n닭개장\n동그랑땡전*케찹\n마카로니콘샐러드\n아삭이고추무침\n배추김치\n\n<선택식>\n돈까스정식\n크림스프\n웨지감자*케찹\n마카로니콘샐러드\n배추김치",
+    "dinner": "쌀 밥\n조랭이떡국\n야채쫄면\n건파래볶음\n궁채장아찌\n배추김치"
+  },
+  {
+    "date": "2026-03-13",
+    "lunch": "쌀 밥\n참치김치찌개\n소보로계란장조림\n오젓무말랭이\n봄동유자샐러드\n깍두기\n\n<선택식>\n잔치국수\n새우튀김*타르소스\n봄동유자샐러드\n꼬들단무지\n배추김치",
+    "dinner": "쌀 밥\n순두부찌개\n돈육고추잡채\n꽃 빵\n고춧잎무침\n배추김치"
+  },
+  {
+    "date": "2026-03-14",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-15",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-16",
+    "lunch": "쌀 밥\n김치두부국\n고기산적조림\n청포묵김가루무침\n케요네즈샐러드\n배추김치\n\n<선택식>\n오므라이스\n미소장국\n감자고로케&케찹\n케요네즈샐러드\n배추김치",
+    "dinner": "쌀 밥\n콩나물국\n고등어김치조림\n연두부&양념장\n치커리사과생채\n배추김치"
+  },
+  {
+    "date": "2026-03-17",
+    "lunch": "쌀 밥\n계란파국\n이바돔등뼈찜\n조미김\n부추겉절이\n배추김치\n\n<선택식>\n해물짬뽕\n크림새우탕수육\n모닝빵글레이즈드\n단무지\n배추김치",
+    "dinner": "쌀 밥\n맑은미역국\n마파두부\n군만두&초간장\n숙주나물무침\n배추김치"
+  },
+  {
+    "date": "2026-03-18",
+    "lunch": "쌀 밥\n어묵국\n미트볼라따뚜이\n샐러드파스타\n모듬피클\n배추김치\n\n<선택식>\n후리가케주먹밥\n로제찜닭\n어묵국\n모듬피클\n배추김치",
+    "dinner": "쌀 밥\n순살감자탕\n스크램블에그\n견과류멸치볶음\n오이무침\n배추김치"
+  },
+  {
+    "date": "2026-03-19",
+    "lunch": "콩나물밥&양념장\n시래기된장국\n간장돼지불고기\n브로콜리참깨무침\n무생채/매실에이드\n배추김치\n\n<선택식>\n순대국밥\n해물부추전\n무말랭이\n상추겉절이/매실에이드\n깍두기",
+    "dinner": "쌀 밥\n돈육김치찌개\n버터갈릭치킨너겟\n감자채볶음\n돌나물무침\n배추김치"
+  },
+  {
+    "date": "2026-03-20",
+    "lunch": "쌀 밥\n우거지해장국\n비엔나떡볶음\n호박나물\n그린샐러드\n배추김치\n\n<선택식>\n참치야채비빔밥\n미역국\n모듬튀김강정\n통들깨부추무침\n배추김치",
+    "dinner": "햄야채볶음밥\n유부장국\n함박스테이크조림\n쥐어채볶음\n콘샐러드\n배추김치"
+  },
+  {
+    "date": "2026-03-21",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-22",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-23",
+    "lunch": "쌀 밥\n파개장\n해물야끼우동\n명엽채조림\n치커리샐러드\n배추김치\n\n<선택식>\n스팸마요덮밥\n어묵국\n치즈떡볶이\n치커리샐러드\n배추김치",
+    "dinner": "쌀 밥\n미역국\n제육불고기\n애기새송이버섯볶음\n오리엔탈상추\n배추김치"
+  },
+  {
+    "date": "2026-03-24",
+    "lunch": "찰현미밥\n북어무국\n묵은지닭조림\n모듬콩조림\n오이초무침\n깍두기\n\n<선택식>\n유부가락국수\n새우튀김\n오이초무침\n꼬들단무지\n배추김치",
+    "dinner": "쌀 밥\n고추장수제비국\n피쉬앤칩스*콘소스\n도토리묵무침\n콩나물무침\n배추김치"
+  },
+  {
+    "date": "2026-03-25",
+    "lunch": "쌀 밥\n돈육호박찌개\n참치두부조림\n남포동비빔당면\n간장고추지/파인애플에이드\n배추김치\n\n<선택식>\n돈까스김치나베\n고구마맛탕\n마카로니샐러드\n파인애플에이드\n깍두기",
+    "dinner": "쌀 밥\n미니온메밀\n왕만두*초간장\n매운어묵볶음\n흑임자양배추샐러드\n배추김치"
+  },
+  {
+    "date": "2026-03-26",
+    "lunch": "쌀 밥\n우동국물\n카레소스\n칠리깐풍기\n단무지무침\n배추김치\n\n<선택식>\n전주식콩나물국밥\n야채고로케*케찹\n부추겉절이\n오이고추장아찌\n깍두기",
+    "dinner": "영양밥\n미소장국\n부대볶음\n구운김*양념장\n바나나\n배추김치"
+  },
+  {
+    "date": "2026-03-27",
+    "lunch": "봄나물비빔밥*고추장\n얼갈이된장국\n계란후라이\n콩가루모닝빵\n요구르트\n배추김치\n\n<선택식>\n탄탄면\n후르츠탕수육\n그린샐러드\n오복지무침/요구르트\n배추김치",
+    "dinner": "쌀 밥\n순두부찌개\n청양마요미트볼\n파래자반무침\n무생채\n배추김치"
+  },
+  {
+    "date": "2026-03-28",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-29",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-03-30",
+    "lunch": "쌀 밥\n김치콩나물국\n돈채짜장볶음\n김말이튀김\n단무지\n배추김치\n\n<선택식>\n투움바파스타\n양송이스프\n불고기퀘사디아\n오이피클\n배추김치",
+    "dinner": "흑미밥\n사골만둣국\n돈육메추리알조림\n미역줄기볶음\n조미김\n배추김치"
+  },
+  {
+    "date": "2026-03-31",
+    "lunch": "쌀 밥\n소고기무국\n햄감자조림\n들기름막국수\n고추장아찌\n배추김치\n\n<선택식>\n김치볶음밥\n유부장국\n설탕핫도그\n계란후라이/사과주스\n깍두기",
+    "dinner": "쌀 밥\n영양닭죽\n야채튀김&초간장\n어묵볶음\n참나물무침\n깍두기"
+  }
+];
+
+  function upsertMealData(newItem) {
+    const idx = mealData.findIndex((item) => item.date === newItem.date);
+    if (idx >= 0) {
+      mealData[idx] = newItem;
+    } else {
+      mealData.push(newItem);
+    }
+  }
+
+  PATCH_MEALS.forEach(upsertMealData);
+
+  try {
+    if (typeof unclearMealDates !== "undefined") {
+      PATCH_MEALS.forEach((item) => {
+        const idx = unclearMealDates.indexOf(item.date);
+        if (idx >= 0) unclearMealDates.splice(idx, 1);
+      });
+    }
+  } catch (error) {
+    console.warn("unclearMealDates 정리 중 오류:", error);
+  }
+
+  console.log("2026_03 백학사 식단 데이터 패치 적용 완료:", PATCH_MEALS.length, "개");
+})();
+</script>
+
+<!-- 2026_04 백학사 식단 데이터 패치
+     기존 index.html 코드 아래쪽, 가능하면 </body> 바로 위에 붙여넣으세요.
+     이 블록은 mealData에 식단을 추가/덮어쓰기합니다.
+-->
+<script>
+(() => {
+  const PATCH_MEALS = [
+  {
+    "date": "2026-04-01",
+    "lunch": "쌀 밥\n시래기된장국\n제육볶음\n상추쌈&쌈장\n숙주나물\n배추김치\n\n<선택식>\n순두부라면\n사각햄전&케찹\n코울슬로\n단무지\n배추김치",
+    "dinner": "고추장참치비빔밥\n계란국\n어니언치킨까스\n새싹연두부\n열무겉절이\n배추김치"
+  },
+  {
+    "date": "2026-04-02",
+    "lunch": "쌀 밥\n미니잔치국수\n셀프꼬마김밥\n구운김&겨자소스\n치커리샐러드/레몬아이스티\n배추김치\n\n<선택식>\n닭갈비덮밥\n콩나물국\n야채계란찜\n치커리샐러드/레몬아이스티\n배추김치",
+    "dinner": "쌀 밥\n미역국\n바베큐폭찹\n식빵튀김\n오이양파무침\n배추김치"
+  },
+  {
+    "date": "2026-04-03",
+    "lunch": "쌀 밥\n육개장\n너비아니파채구이\n한식잡채\n그린샐러드\n배추김치\n\n<선택식>\n김가루주먹밥\n바지락칼국수\n알감자버터구이\n쌈배추겉절이\n배추김치",
+    "dinner": "쌀 밥\n김치찌개\n백순대야채볶음\n쥐어채조림\n양념깻잎지\n배추김치"
+  },
+  {
+    "date": "2026-04-04",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-05",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-06",
+    "lunch": "쌀 밥\n미역국\n마파두부\n생선까스*타르소스\n오이초무침\n배추김치\n\n<선택식>\n김치잔치국수\n고기만두*초간장\n쫄단무지\n흑임자양배추샐러드\n열무겉절이",
+    "dinner": "쌀 밥\n홍합무국\n불닭맛돼지불고기\n천사채샐러드\n오리엔탈상추\n배추김치"
+  },
+  {
+    "date": "2026-04-07",
+    "lunch": "냉이밥*양념장\n얼갈이된장국\n고등어김치조림\n감자채햄볶음\n궁채장아찌/매실차\n배추김치\n\n<선택식>\n눈꽃치즈돈까스\n단호박스프\n마카로니샐러드\n오이지무침/매실차\n배추김치",
+    "dinner": "쌀 밥\n뼈다귀감자탕\n옥수수콘전\n꽈리멸치볶음\n아삭이고추무침\n배추김치"
+  },
+  {
+    "date": "2026-04-08",
+    "lunch": "쌀 밥\n어묵국\n국물떡볶이\n찰순대*꽃소금\n세발김가루무침\n배추김치\n\n<선택식>\n참치야채비빔밥\n어묵국\n달걀장조림\n오복지/벚꽃요거트\n배추김치",
+    "dinner": "쌀 밥\n우동국물\n하이라이스\n허니간장모듬튀김\n단무지무침\n배추김치"
+  },
+  {
+    "date": "2026-04-09",
+    "lunch": "쌀 밥\n얼큰콩나물국\n바베큐찜닭\n애느타리버섯무침\n참나물샐러드\n배추김치\n\n<선택식>\n나시고랭볶음밥\n쌀국수\n춘권*칠리소스\n참나물샐러드\n배추김치",
+    "dinner": "김치볶음밥\n미소장국\n계란후라이\n치즈스틱\n그린샐러드\n깍두기"
+  },
+  {
+    "date": "2026-04-10",
+    "lunch": "쌀 밥\n사골우거지국\n미트볼토마토조림\n들기름깻잎파스타\n숙주나물\n배추김치\n\n<선택식>\n설렁탕\n메밀전병\n양파장아찌\n부추겉절이\n깍두기",
+    "dinner": "쌀 밥\n닭곰탕\n건파래볶음\n비빔국수\n간장고추지\n깍두기"
+  },
+  {
+    "date": "2026-04-11",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-12",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-13",
+    "lunch": "쌀 밥\n조랭이떡국\n고기산적델리조림\n명엽채볶음\n치커리사과무침\n배추김치\n\n<선택식>\n묵은지참치말이\n유부우동\n치커리사과무침\n꼬들단무지\n배추김치",
+    "dinner": "콩나물밥&양념장\n아욱된장국\n소세지브로콜리볶음\n시금치나물\n무말랭이\n배추김치"
+  },
+  {
+    "date": "2026-04-14",
+    "lunch": "쌀 밥\n계란국\n카레소스\n미니돈까스\n단무지무침\n배추김치\n\n<선택식>\n치킨마요덮밥\n계란국\n모닝빵&사과잼\n오이초무침\n배추김치",
+    "dinner": "쌀 밥\n북어무국\n김치돈불고기\n청포묵무침\n다시마쌈&초장\n배추겉절이"
+  },
+  {
+    "date": "2026-04-15",
+    "lunch": "찰현미밥\n맑은순두부국\n김풍비빔파스타\n군만두&초간장\n코울슬로\n배추김치\n\n<선택식>\n부대찌개&라면사리\n야채계란말이\n검은콩자반\n코울슬로\n깍두기",
+    "dinner": "쌀 밥\n냉이된장국\n비빔나물&약고추장\n(콩나물·무생채·애호박볶음)\n설탕꽈배기\n블루베리에이드\n배추김치"
+  },
+  {
+    "date": "2026-04-16",
+    "lunch": "쌀 밥\n콩나물국\n닭볶음탕\n김자반볶음\n오리엔탈부추무침\n배추김치\n\n<선택식>\n가츠동\n미니냉모밀\n푸실리샐러드\n오이피클\n배추김치",
+    "dinner": "쌀 밥\n참치김치찌개\n크림떡볶이\n어묵볶음\n수제모듬피클\n배추김치"
+  },
+  {
+    "date": "2026-04-17",
+    "lunch": "쌀 밥\n해물짬뽕국\n후르츠탕수육\n새송이버섯볶음\n반달단무지\n배추김치\n\n<선택식>\n소세지오므라이스\n우동국물\n고구마샐러드\n단무지/사과주스\n배추김치",
+    "dinner": "쌀 밥\n들깨미역국\n돈채숙주볶음\n연두부&양념장\n청경채나물\n배추김치"
+  },
+  {
+    "date": "2026-04-18",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-19",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-20",
+    "lunch": "쌀 밥\n미역국\n바싹불고기\n메밀막국수\n모듬쌈*쌈장\n배추김치\n\n<선택식>\n소보로덮밥\n미소장국\n고구마고로케*케찹\n치커리무침/짜요짜요\n깍두기",
+    "dinner": "베이컨마늘필라프\n맑은우동국\n김치치즈함박스테이크\n마카로니샐러드\n단무지무침\n배추김치"
+  },
+  {
+    "date": "2026-04-21",
+    "lunch": "쌀 밥\n김치찌개\n코다리엿장조림\n비엔나펜네볶음\n백오이무침\n깍두기\n\n<선택식>\n베테랑칼국수\n물만두*초간장\n백오이무침\n꼬들단무지\n쌈배추겉절이",
+    "dinner": "쌀 밥\n콩나물국\n순대야채볶음\n양념깻잎지\n그린샐러드*키위드레싱\n배추김치"
+  },
+  {
+    "date": "2026-04-22",
+    "lunch": "쌀 밥\n육개장\n누들떡잡채\n쥐어채볶음\n오리엔탈상추무침\n배추김치\n\n<선택식>\n돈까스정식\n크림스프\n콘샐러드\n오이피클\n배추김치",
+    "dinner": "쌀 밥\n고추장호박찌개\n안동찜닭\n칠리볼어묵볶음\n숙주나물\n배추김치"
+  },
+  {
+    "date": "2026-04-23",
+    "lunch": "쌀 밥\n순살감자탕\n분홍소세지전\n조미구이김\n시금치나물/짜요짜요\n배추김치\n\n<선택식>\n유니짜장면\n계란국\n유린기\n단무지/짜요짜요\n배추김치",
+    "dinner": "쌀 밥\n사골우거지국\n두부커틀렛*소스\n야채쫄면\n유채나물\n배추김치"
+  },
+  {
+    "date": "2026-04-24",
+    "lunch": "곤드레밥*양념장\n얼갈이된장국\n모듬장조림\n미역줄기볶음\n무말랭이\n배추김치\n\n<선택식>\n날치알김치볶음밥\n어묵국\n핫도그*케찹\n나쵸샐러드\n깍두기",
+    "dinner": "쌀 밥\n해장라면\n계란볶이\n알감자버터구이\n참나물샐러드\n배추김치"
+  },
+  {
+    "date": "2026-04-25",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-26",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-04-27",
+    "lunch": "잡곡밥\n소고기무국\n참치두부조림\n감자채볶음\n부추겉절이\n배추김치\n\n<선택식>\n치즈닭갈비덮밥\n맑은무채국\n김말이튀김&초간장\n부추겉절이\n배추김치",
+    "dinner": "쌀 밥\n유부김칫국\n가쓰오야끼우동\n도토리묵무침\n간장고추지\n배추김치"
+  },
+  {
+    "date": "2026-04-28",
+    "lunch": "쌀 밥\n시금치된장국\n제육볶음\n양배추쌈&쌈장\n숙주나물\n배추김치\n\n<선택식>\n봉골레파스타\n콩나물국\n또띠아피자\n수제모듬피클\n배추김치",
+    "dinner": "쌀 밥\n부대찌개\n고등어카레구이\n김자반볶음\n무생채\n배추김치"
+  },
+  {
+    "date": "2026-04-29",
+    "lunch": "햄야채볶음밥\n어묵무국\n치킨너겟&머스타드\n새송이짬뽕볶음\n치커리샐러드\n배추김치\n\n<선택식>\n깍두기볶음밥\n어묵무국\n베이컨로제떡볶이\n치커리샐러드\n배추김치",
+    "dinner": "쌀 밥\n미역국\n매운등뼈찜\n단호박범벅\n오이무침\n배추김치"
+  },
+  {
+    "date": "2026-04-30",
+    "lunch": "쌀 밥\n팽이장국\n토마토시금치카레\n칠리깐풍기\n단무지/냉미숫가루\n배추김치\n\n<선택식>\n잔치국수\n김가루주먹밥\n새우까스&콘마요소스\n단무지/냉미숫가루\n배추김치",
+    "dinner": "쌀 밥\n영양닭죽\n해물김치전\n오젓무말랭이\n양상추샐러드\n깍두기"
+  }
+];
+
+  function upsertMealData(newItem) {
+    const idx = mealData.findIndex((item) => item.date === newItem.date);
+    if (idx >= 0) {
+      mealData[idx] = newItem;
+    } else {
+      mealData.push(newItem);
+    }
+  }
+
+  PATCH_MEALS.forEach(upsertMealData);
+
+  try {
+    if (typeof unclearMealDates !== "undefined") {
+      PATCH_MEALS.forEach((item) => {
+        const idx = unclearMealDates.indexOf(item.date);
+        if (idx >= 0) unclearMealDates.splice(idx, 1);
+      });
+    }
+  } catch (error) {
+    console.warn("unclearMealDates 정리 중 오류:", error);
+  }
+
+  console.log("2026_04 백학사 식단 데이터 패치 적용 완료:", PATCH_MEALS.length, "개");
+})();
+</script>
+
+<!-- 2026_05_06 백학사 식단 데이터 패치
+     기존 index.html 코드 아래쪽, 가능하면 </body> 바로 위에 붙여넣으세요.
+     이 블록은 mealData에 식단을 추가/덮어쓰기합니다.
+-->
+<script>
+(() => {
+  const PATCH_MEALS = [
+  {
+    "date": "2026-05-01",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-02",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-03",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-04",
+    "lunch": "쌀 밥\n김칫국\n짜장소스\n맛동산탕수육\n단무지무침\n배추김치\n\n<선택식>\n마제소바\n우동국물\n고로케*케찹\n열대과일샐러드\n배추김치",
+    "dinner": "쌀 밥\n순대국\n계란말이\n어묵볶음\n양파장아찌\n배추김치"
+  },
+  {
+    "date": "2026-05-05",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-06",
+    "lunch": "뿌리채소영양밥\n냉이된장국\n부대볶음\n구이김*양념장\n치커리샐러드/매실차\n배추김치\n\n<선택식>\n크림스파게티\n쇠고기스프\n해쉬브라운피자\n오이피클/매실차\n배추김치",
+    "dinner": "쌀 밥\n순두부찌개\n돈채굴소스볶음\n한식잡채\n고춧잎무침\n배추김치"
+  },
+  {
+    "date": "2026-05-07",
+    "lunch": "쌀 밥\n건새우미역국\n묵은지닭조림\n콩나물무침\n하트떡라면땅\n깍두기\n\n<선택식>\n상추튀김\n어묵무국\n떡볶이\n꼬들단무지\n배추김치",
+    "dinner": "쌀 밥\n아욱국\n비빔나물*약고추장\n모닝빵샌드위치\n요구르트\n배추김치"
+  },
+  {
+    "date": "2026-05-08",
+    "lunch": "쌀 밥\n육개장칼국수\n고기산적구이\n파채부추겉절이\n오복지\n배추김치\n\n<선택식>\n오므라이스\n미소장국\n새우튀김*타르소스\n오복지\n배추김치",
+    "dinner": "쌀 밥\n북어무국\n이장우장조림비빔소스\n양념순두부\n청경채나물\n배추김치"
+  },
+  {
+    "date": "2026-05-09",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-10",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-11",
+    "lunch": "쌀 밥\n돼지김치짜글이\n생선까스&타르소스\n검은콩조림\n오이무침\n배추김치\n\n<선택식>\n돈코츠라멘\n타코야끼\n코울슬로\n오이무침\n배추김치",
+    "dinner": "쌀 밥\n콩나물국\n간장돼지불고기\n쥐어채볶음\n무생채\n배추김치"
+  },
+  {
+    "date": "2026-05-12",
+    "lunch": "쌀 밥\n유부장국\n마라마파두부\n햄감자조림\n조미김\n배추김치\n\n<선택식>\n참치김치덮밥\n유부장국\n설탕핫도그\n마카로니범벅/망고주스\n깍두기",
+    "dinner": "쌀 밥\n계란국\n단호박카레소스\n야채쫄면\n그린샐러드&키위드레싱\n배추김치"
+  },
+  {
+    "date": "2026-05-13",
+    "lunch": "쌀 밥\n근대된장국\n바베큐폭찹\n연두부&양념장\n아삭고추무침\n배추김치\n\n<선택식>\n짜계치(짜장라면·계란·치즈)\n순두부국\n모듬튀김강정\n딸기잼모닝빵/단무지\n배추김치",
+    "dinner": "김밥볶음밥\n옹심이만둣국\n로제떡볶이\n숙주나물\n치커리유자무침\n배추김치"
+  },
+  {
+    "date": "2026-05-14",
+    "lunch": "쌀 밥\n소고기무국\n미트볼그라탕\n들기름깻잎파스타\n건새우호박볶음\n배추김치\n\n<선택식>\n새우볶음밥\n미소장국\n치킨텐더또띠아\n오이피클\n배추김치",
+    "dinner": "쌀 밥\n고추장수제비\n마약계란장\n어묵볶음\n도토리묵무침\n배추김치"
+  },
+  {
+    "date": "2026-05-15",
+    "lunch": "쌀 밥\n미역국\n매콤간장찜닭\n식빵튀김\n부추겉절이\n배추김치\n\n<선택식>\n땡초주먹밥\n김치가락국수\n고기손만두&간장\n단무지무침\n쌈배추겉절이",
+    "dinner": "쌀 밥\n부대찌개\n동그랑땡전&케찹\n콩나물무침\n고추장아찌\n배추김치"
+  },
+  {
+    "date": "2026-05-16",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-17",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-18",
+    "lunch": "쌀 밥\n소고기무국\n순대야채볶음\n명엽채조림\n도라지오이무침\n배추김치\n\n<선택식>\n돈까스정식\n크림스프\n마카로니샐러드\n스틱단무지\n배추김치",
+    "dinner": "쌀 밥\n나가사끼짬뽕국\n청양풍볶음우동\n짜사이무침\n치커리샐러드\n배추김치"
+  },
+  {
+    "date": "2026-05-19",
+    "lunch": "쌀 밥\n순두부국\n제육불고기\n양배추쌈*쌈장\n콩나물맛살겨자무침\n배추김치\n\n<선택식>\n스팸마요덮밥\n미소장국\n국물떡볶이\n백오이무침\n배추김치",
+    "dinner": "고깃집마무리볶음밥\n호박된장국\n허니버터치킨너겟\n옥수수콘샐러드\n양념고추지\n배추김치"
+  },
+  {
+    "date": "2026-05-20",
+    "lunch": "쌀 밥\n김치찌개\n코다리시래기조림\n도시락김/복숭아아이스티\n알리오올리오펜네\n깍두기\n\n<선택식>\n베테랑칼국수\n메밀전병\n아삭이고추무침\n단무지/복숭아아이스티\n쌈배추겉절이",
+    "dinner": "쌀 밥\n계란국\n매운고추잡채\n연유꽃빵\n브로콜리숙회\n배추김치"
+  },
+  {
+    "date": "2026-05-21",
+    "lunch": "흑미밥\n순살감자탕\n궁중떡볶이\n건새우마늘쫑볶음\n애느타리초무침\n배추김치\n\n<선택식>\n지코바치밥\n어묵무국\n알감자버터구이\n참나물샐러드\n배추김치",
+    "dinner": "쌀 밥\n유부우동국\n하이라이스\n모듬튀김*소스\n실곤약초무침\n배추김치"
+  },
+  {
+    "date": "2026-05-22",
+    "lunch": "쌀 밥\n닭곰탕\n애기새송이튀김*초간장\n사각어묵볶음\n양념깻잎지\n배추김치\n\n<선택식>\n열무김치냉국수\n왕만두*초간장\n사각어묵볶음\n쫄단무지\n배추김치",
+    "dinner": "쌀 밥\n미역국\n떡갈비\n야채계란찜\n부추겉절이\n배추김치"
+  },
+  {
+    "date": "2026-05-23",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-24",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-25",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-26",
+    "lunch": "쌀 밥\n계란국\n돈채짜장볶음\n레몬크림탕수육\n단무지무침\n배추김치\n\n<선택식>\n날치알주먹밥\n양송이스프\n베이컨토마토스파게티\n스마일감자튀김/오이피클\n배추김치",
+    "dinner": "표고콩나물밥\n들깨미역국\n비엔나어묵볶음\n구운김&양념장\n오이부추무침\n배추김치"
+  },
+  {
+    "date": "2026-05-27",
+    "lunch": "쌀 밥\n콩나물국\n강된장두부소스\n칼비빔면\n그린샐러드\n배추김치\n\n<선택식>\n돈까스김치나베\n모닝빵샌드위치\n고구마샐러드\n사과주스\n배추김치",
+    "dinner": "쌀 밥\n시래기된장국\n오삼불고기\n모듬쌈&쌈장\n견과류콩조림\n배추김치"
+  },
+  {
+    "date": "2026-05-28",
+    "lunch": "병아리콩밥\n북엇국\n묵은지등뼈찜\n건파래볶음\n미역줄기볶음\n깍두기\n\n<선택식>\n계란볶음밥\n베트남쌀국수\n춘권&사모사튀김\n오이맛살냉채\n배추김치",
+    "dinner": "쌀 밥\n유부장국\n청양크림함박\n오색탕평채\n수제모듬피클\n배추김치"
+  },
+  {
+    "date": "2026-05-29",
+    "lunch": "쌀 밥\n부대찌개\n미니돈까스&소스\n감자채볶음\n상추겉절이\n배추김치\n\n<선택식>\n참치야채비빔밥\n맑은무채국\n감자고로케\n계란후라이/요구르트\n배추김치",
+    "dinner": "쌀 밥\n영양닭죽\n고기&김치만두\n메추리알곤약조림\n오짓어젓갈\n깍두기"
+  },
+  {
+    "date": "2026-05-30",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-05-31",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-01",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-02",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-03",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-04",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-05",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-06",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  },
+  {
+    "date": "2026-06-07",
+    "lunch": "등록된 식단내용이(가) 없습니다.",
+    "dinner": "등록된 식단내용이(가) 없습니다."
+  }
+];
+
+  function upsertMealData(newItem) {
+    const idx = mealData.findIndex((item) => item.date === newItem.date);
+    if (idx >= 0) {
+      mealData[idx] = newItem;
+    } else {
+      mealData.push(newItem);
+    }
+  }
+
+  PATCH_MEALS.forEach(upsertMealData);
+
+  try {
+    if (typeof unclearMealDates !== "undefined") {
+      PATCH_MEALS.forEach((item) => {
+        const idx = unclearMealDates.indexOf(item.date);
+        if (idx >= 0) unclearMealDates.splice(idx, 1);
+      });
+    }
+  } catch (error) {
+    console.warn("unclearMealDates 정리 중 오류:", error);
+  }
+
+  console.log("2026_05_06 백학사 식단 데이터 패치 적용 완료:", PATCH_MEALS.length, "개");
+})();
+</script>
+
+
+</body>
+</html>
