@@ -2228,6 +2228,89 @@
 })();
 </script>
 
+<!-- 채팅 초기화 버튼을 퀵메뉴 오른쪽 끝에 추가 -->
+<script>
+(() => {
+  const quickGuide = document.querySelector(".quick-guide");
+  const chatWindow = document.getElementById("chatWindow");
+
+  if (!quickGuide || !chatWindow) {
+    console.warn("quickGuide 또는 chatWindow를 찾지 못했습니다.");
+    return;
+  }
+
+  // 이미 초기화 버튼이 있으면 중복 생성 방지
+  const oldClearButton = document.querySelector(".quick-clear-button");
+  if (oldClearButton) {
+    oldClearButton.remove();
+  }
+
+  // 퀵메뉴 줄 정렬 보정
+  const style = document.createElement("style");
+  style.textContent = `
+    .quick-guide {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .quick-clear-button {
+      margin-left: auto;
+      border: none;
+      background: #003f7d;
+      color: #ffffff;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 6px 14px rgba(0, 63, 125, 0.2);
+    }
+
+    .quick-clear-button:hover {
+      background: #002f5f;
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 640px) {
+      .quick-clear-button {
+        margin-left: 0;
+        width: 100%;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+  const clearButton = document.createElement("button");
+  clearButton.type = "button";
+  clearButton.className = "quick-clear-button";
+  clearButton.textContent = "채팅 초기화";
+
+  clearButton.addEventListener("click", () => {
+    chatWindow.innerHTML = `
+      <div class="message-row bot">
+        <div class="message bot">안녕하세요. 조선대 플러스+입니다.
+학사일정 또는 기숙사 식단을 질문해 주세요.
+
+예시
+- 중간고사 언제야?
+- 개강일 알려줘
+- 5월 22일 중식
+- 어제 식단
+- 지난주 저녁</div>
+      </div>
+    `;
+
+    chatWindow.scrollTop = 0;
+  });
+
+  quickGuide.appendChild(clearButton);
+
+  console.log("퀵메뉴 오른쪽 채팅 초기화 버튼 추가 완료");
+})();
+</script>
 
 </body>
 </html>
